@@ -53,6 +53,33 @@ const glVariance = p => p.evaluate(() => {
 })
 // 結果画面を即座に作る（演出の待ち時間を飛ばす）
 const toResult = (q, js) => q.evaluate(js => { st.dbg.pause(true); eval(js); st.finish(); st.fillResult(true) }, js)
+// ---- Xでポスト の検査道具
+// window.open をスタブして押す → 開いたURLを分解して確かめる
+const xStub = async (pg, ns, pub, tag) => {
+  await pg.evaluate(() => { window.__opened = []; if (!window.__origOpen) window.__origOpen = window.open; window.open = (...a) => { window.__opened.push(a); return null } })
+  const vis = await pg.evaluate(() => { const b = document.querySelector('#bX'), r = b.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), inView: r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth, clip: b.scrollWidth > b.clientWidth + 1, bg: getComputedStyle(b).backgroundColor, label: b.textContent.trim(), svg: !!b.querySelector('svg path') } })
+  await pg.click('#bX')
+  const r = await pg.evaluate(ns => ({ opened: window.__opened, text: window[ns].xText(), url: window[ns].xUrl() }), ns)
+  await pg.evaluate(() => { window.open = window.__origOpen })
+  expect(r.opened.length === 1, r)
+  const [u, target, feat] = r.opened[0], q = new URL(u)
+  const text = q.searchParams.get('text'), url = q.searchParams.get('url')
+  expect(u.startsWith('https://x.com/intent/post?') && target === '_blank' && /noopener/.test(feat || '') && u === r.url, r.opened[0])
+  expect(text === r.text && text.includes(tag) && (text.match(/#/g) || []).length === 1 && url === pub && !/https?:\/\//.test(text), { text, url })
+  expect(vis.inView && !vis.clip && vis.svg && vis.bg === 'rgb(0, 0, 0)' && vis.h >= 36, vis)
+  return { label: vis.label, text }
+}
+// 本物のクリックで新しいタブ（popup）が開く。x.com へは出ずにダミーを返す
+const xPopup = async (pg, pub) => {
+  await pg.context().route(/^https:\/\/x\.com\//, r => r.fulfill({ status: 200, contentType: 'text/html', body: '<title>x</title>ok' }))
+  const [pop] = await Promise.all([pg.waitForEvent('popup', { timeout: 8000 }), pg.click('#bX')])
+  await pop.waitForLoadState().catch(() => {})
+  const u = new URL(pop.url()); await pop.close()
+  expect(u.origin + u.pathname === 'https://x.com/intent/post' && u.searchParams.get('url') === pub && u.searchParams.get('text'), pop.url())
+  return u.searchParams.get('text')
+}
+// 結果画面のボタンの文字が切れていない
+const btnClip = pg => pg.evaluate(() => [...document.querySelectorAll('#vResult button')].filter(b => b.offsetParent && b.scrollWidth > b.clientWidth + 1).map(b => b.id + ':' + b.scrollWidth + '>' + b.clientWidth))
 const SIZES = [[360, 640, 'small'], [390, 844, 'phone'], [844, 390, 'land'], [667, 375, 'land-se'], [768, 1024, 'tab'], [1440, 900, 'pc']]
 const GPU = { args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] }
 
@@ -216,6 +243,23 @@ await t('結果を1枚の画像（1080x1350）にして保存できる', async (
   const [dl] = await Promise.all([p.waitForEvent('download', { timeout: 8000 }), p.click('#bSave')])
   expect(card.w === 1080 && card.h === 1350 && card.v > 500 && dl.suggestedFilename() === 'sushi-tower.png', { w: card.w, h: card.h, v: card.v }); return { v: card.v, file: dl.suggestedFilename() }
 })
+const PUB = 'https://tom3games.github.io/sushi-tower/'
+await t('Xでポスト: 日本語（ボタンが見える・x.com/intent/post・本文に称号と枚数とハッシュタグ・url=公開URL）', async () => {
+  await p.evaluate(() => document.querySelectorAll('.reveal').forEach(e => e.classList.add('on')))
+  const r = await xStub(p, 'st', PUB, '#回転寿司の皿タワー')
+  const stamp = await p.evaluate(() => document.querySelector('#rStamp').lastChild.textContent)
+  const n = await p.evaluate(() => st.S.result.count)
+  expect(r.label === 'Xでポスト' && r.text.includes(stamp) && r.text.includes(n + '枚'), { r, stamp }); return r.text
+})
+await t('Xでポスト: 本物のクリックで新しいタブが開く', async () => { const tx = await xPopup(p, PUB); expect(/#回転寿司の皿タワー/.test(tx), tx); return tx.length })
+await t('Xでポスト: 英語', async () => {
+  await p.click('#bLang')
+  const r = await xStub(p, 'st', PUB, '#SushiPlateTower')
+  const stamp = await p.evaluate(() => document.querySelector('#rStamp').lastChild.textContent)
+  await p.screenshot({ path: ROOT + '/shots/result-en-x.png' })
+  await p.click('#bLang')
+  expect(r.label === 'Post on X' && r.text.includes(stamp) && !/[ぁ-んァ-ン一-龥]/.test(r.text), { r, stamp }); return r.text
+})
 await t('英語に切り替えると全画面が英語（結果・画像も）', async () => {
   await p.click('#bLang')
   const r = await p.evaluate(async () => {
@@ -252,8 +296,10 @@ for (const [w, h, name] of SIZES) {
   await toResult(q, "st.start(9); st.dbg.step(60); st.force.stack(Array(st.D.CEIL).fill('white').map((x,i)=>['white','blue','red','gold','black'][i%5])); st.S.ceil = true; st.S.slips = 2")
   await q.evaluate(() => { st.dbg.step(90); st.dbg.render() })
   views.ceil = await fit(q); await q.screenshot({ path: `${ROOT}/shots/fit-${name}-result-ceil.png` })
+  { const c = await btnClip(q); await t(`${name}: 結果画面のボタンの文字が切れない（日本語）`, async () => { expect(!c.length, c) }) }
   await q.click('#bLang'); await toResult(q, 'st.start(10); st.dbg.step(30)'); await q.evaluate(() => { st.dbg.step(60); st.dbg.render() })
   views.teaEn = await fit(q); await q.screenshot({ path: `${ROOT}/shots/fit-${name}-result-tea-en.png` })
+  { const c = await btnClip(q); await t(`${name}: 結果画面のボタンの文字が切れない（英語）`, async () => { expect(!c.length, c) }) }
   await q.evaluate(() => st.title()); views.titleEn = await fit(q)
   await q.click('#bLang')
   for (const [v, r] of Object.entries(views)) await t(`一画面に収まる ${name} ${w}x${h} ${v}`, async () => { expect(!r.over.length, r) })

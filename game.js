@@ -896,6 +896,11 @@ $('#bHowGo').onclick = () => { Snd.sfx('tap'); startGame() }
 $('#bAgain').onclick = () => { Snd.sfx('tap'); revealTimers.forEach(clearTimeout); startGame() }
 $('#bTitle').onclick = () => { Snd.sfx('tap'); revealTimers.forEach(clearTimeout); goTitle() }
 $('#bSave').onclick = () => { Snd.sfx('tap'); saveImage() }
+// Xでポスト: クリックの同期処理内で開く（ポップアップブロック回避）。URL は url パラメータで渡す
+const PUB_URL = 'https://tom3games.github.io/sushi-tower/'
+function xText() { if (!S.result) return ''; const tier = tierOf(S.result.tier); return T('shareText').replace('{t}', tier[S.lang]).replace('{n}', S.result.count).replace('{b}', yen(S.result.total)) }
+function xUrl() { return 'https://x.com/intent/post?text=' + encodeURIComponent(xText()) + '&url=' + encodeURIComponent(PUB_URL) }
+$('#bX').onclick = () => { window.open(xUrl(), '_blank', 'noopener'); Snd.sfx('tap') }
 $('#bPause').onclick = () => pauseGame(true)
 $('#bResume').onclick = () => pauseGame(false)
 $('#bQuit').onclick = () => { S.view = 'title'; goTitle() }
@@ -933,7 +938,7 @@ function render() {
 // ---------- 検証用の窓口
 window.st = {
   S, D, TUNE, renderer, camera, scene, me, chef, staff, nb,
-  start: seed => startGame(seed), title: goTitle, finish, grab, saveImage, makeCard, fillResult, computeResult, stability, topX, topY,
+  start: seed => startGame(seed), title: goTitle, finish, grab, saveImage, xText, xUrl, PUB_URL, makeCard, fillResult, computeResult, stability, topX, topY,
   setBot: b => { S.bot = b },
   // 種とボットを決めて最後まで一気に回す（分布と再現性の検証）
   simulate(seed, bot) {
