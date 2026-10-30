@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>回転寿司の皿タワー | SUSHI PLATE TOWER</title>
+<meta name="description" content="食べた皿を、天井まで積み上げろ。お会計は見ないふりで。回転寿司のレーンから皿を取って食べ、目の前に積み上げる45秒の3Dバカゲー。崩したら店員と板前が「お客様ーっ！」">
+<meta name="theme-color" content="#2a1712">
+<meta property="og:type" content="website">
+<meta property="og:title" content="回転寿司の皿タワー | SUSHI PLATE TOWER">
+<meta property="og:description" content="食べた皿を、天井まで積み上げろ。お会計は見ないふりで。崩したら「お客様ーっ！」">
+<meta property="og:image" content="https://tom3games.github.io/sushi-tower/og.png?v=1">
+<meta property="og:url" content="https://tom3games.github.io/sushi-tower/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232a1712'/%3E%3Cellipse cx='32' cy='52' rx='22' ry='6' fill='%23d83a34'/%3E%3Cellipse cx='32' cy='42' rx='20' ry='6' fill='%23e2b33c'/%3E%3Cellipse cx='32' cy='32' rx='18' ry='6' fill='%233d7bd9'/%3E%3Cellipse cx='32' cy='22' rx='16' ry='6' fill='%23f3efe6'/%3E%3Cpath d='M22 16q10-8 20 0' stroke='%23ff7a45' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DotGothic16&family=M+PLUS+Rounded+1c:wght@500;800;900&display=swap" rel="stylesheet">
+<style>
+[hidden]{display:none!important}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --wood:#2a1712;--wood2:#4a2a1c;--hinoki:#f1dcb4;--paper:#fbf7ee;--ink:#1d1410;--muted:#8a7a6a;
+  --red:#d83a34;--red-dk:#8f1d1a;--gold:#f2c14e;--gold-dk:#9c7414;--indigo:#26365e;--green:#7cbf3a;
+  --disp:'Dela Gothic One','Hiragino Sans','Yu Gothic',sans-serif;--dot:'DotGothic16','Osaka-Mono',monospace;
+}
+html{background:var(--wood);touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{height:100%;color:var(--paper);font-family:'M PLUS Rounded 1c','Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic',sans-serif;-webkit-tap-highlight-color:transparent;word-break:auto-phrase;line-break:strict;overflow-wrap:anywhere}
+body{overflow:hidden;background:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button,canvas{touch-action:manipulation}
+button{font-family:inherit;color:inherit;font-size:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+#gl{position:fixed;inset:0;width:100vw;height:100svh;display:block;z-index:0;touch-action:none}
+main.view{position:fixed;inset:0;z-index:2;height:100svh;overflow:hidden}
+
+/* ---------- 共通部品 */
+.btn{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:900;font-size:18px;letter-spacing:.04em;border:0;border-radius:16px;min-height:54px;padding:0 18px;cursor:pointer;width:100%;
+  background:var(--paper);color:var(--ink);box-shadow:0 5px 0 #b3a58c,0 10px 18px rgba(0,0,0,.3);transition:transform .07s,box-shadow .07s;white-space:nowrap}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:4px;height:44%;border-radius:12px 12px 40% 40%/12px 12px 14px 14px;background:linear-gradient(rgba(255,255,255,.45),rgba(255,255,255,0));pointer-events:none}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #b3a58c}
+.btn svg{width:24px;height:24px;flex:none;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.btn.red{background:linear-gradient(#ee5a4f,var(--red));color:#fff;box-shadow:0 6px 0 var(--red-dk),0 12px 24px rgba(216,58,52,.35);font-size:21px;min-height:62px}
+.btn.red:active{box-shadow:0 1px 0 var(--red-dk)}
+.btn.ghost{background:rgba(29,20,16,.62);color:var(--paper);box-shadow:inset 0 0 0 2px rgba(251,247,238,.4);font-size:16px;min-height:48px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.btn.ghost::before{display:none}
+.row{display:flex;gap:10px;width:100%}
+.row>.btn{flex:1;min-width:0}
+#corner{position:fixed;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));z-index:50;display:flex;gap:6px}
+#corner button{height:40px;min-width:42px;padding:0 10px;border-radius:12px;border:0;background:rgba(29,20,16,.72);box-shadow:inset 0 0 0 2px rgba(251,247,238,.3);font-weight:900;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
+#corner svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- タイトル */
+#vTitle{display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:max(56px,calc(env(safe-area-inset-top) + 50px)) 16px max(26px,calc(env(safe-area-inset-bottom) + 20px));background:linear-gradient(rgba(42,23,18,.7),rgba(42,23,18,0) 38%,rgba(42,23,18,0) 62%,rgba(42,23,18,.75))}
+.noren{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center}
+.logo{line-height:1;transform:rotate(-2deg)}
+.logo .l1{display:inline-block;font-family:var(--disp);font-size:clamp(20px,min(6.4vw,4.6vh),36px);color:var(--ink);background:var(--hinoki);padding:4px 14px 6px;border-radius:6px;box-shadow:0 4px 0 #a88a5a}
+.logo .l2{display:block;font-family:var(--disp);font-size:clamp(54px,min(19vw,12vh),120px);color:#fff;margin-top:6px;letter-spacing:.02em;
+  text-shadow:0 5px 0 var(--red-dk),0 9px 0 rgba(0,0,0,.35),0 0 28px rgba(216,58,52,.55);-webkit-text-stroke:2px var(--red-dk);paint-order:stroke fill}
+html[lang=en] .logo .l2{font-size:clamp(40px,min(12vw,10vh),92px)}
+.logo .sub{display:inline-block;margin-top:12px;font-weight:900;font-size:clamp(13px,3.7vw,17px);padding:6px 14px;border-radius:99px;background:rgba(29,20,16,.82);box-shadow:inset 0 0 0 2px var(--gold);max-width:92vw;transform:rotate(2deg)}
+.tBtns{width:min(380px,100%);display:flex;flex-direction:column;gap:12px}
+.best{font-weight:900;font-size:13px;text-align:center;color:var(--hinoki);text-shadow:0 2px 4px #000}
+
+/* ---------- 遊び方 */
+#vHow{display:flex;align-items:center;justify-content:center;padding:max(56px,calc(env(safe-area-inset-top) + 50px)) 14px max(16px,calc(env(safe-area-inset-bottom) + 12px));background:rgba(29,20,16,.6)}
+.howCard{width:min(560px,100%);max-height:100%;background:var(--paper);color:var(--ink);border-radius:22px;padding:16px;box-shadow:0 8px 0 #b3a58c,0 18px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:10px;min-height:0;border-top:10px solid var(--indigo)}
+.howCard h2{font-family:var(--disp);font-weight:400;font-size:24px;text-align:center}
+.howList{display:flex;flex-direction:column;gap:8px;min-height:0;overflow:hidden}
+.hi{display:flex;gap:12px;align-items:center;background:#efe6d3;border-radius:14px;padding:8px 10px}
+.hi svg{flex:none;width:64px;height:64px}
+.hi b{display:block;font-weight:900;font-size:15px;line-height:1.35}
+.hi p{font-size:12.5px;line-height:1.5;color:#5a4a3c;font-weight:500;margin-top:2px}
+.ctrl{font-size:13px;font-weight:800;text-align:center;background:var(--ink);color:var(--gold);border-radius:10px;padding:8px 10px;line-height:1.5}
+
+/* ---------- プレイ中 HUD */
+#vPlay{pointer-events:none}
+#vPlay .hit{pointer-events:auto}
+.hud{position:absolute;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:calc(max(8px,env(safe-area-inset-right)) + 150px);max-width:430px;display:flex;flex-direction:column;gap:6px}
+.timer{position:relative;height:26px;background:rgba(29,20,16,.8);border-radius:99px;box-shadow:inset 0 0 0 2px rgba(251,247,238,.25);display:flex;align-items:center;padding:0 46px 0 10px}
+.timer .bar{flex:1;height:8px;border-radius:4px;background:repeating-linear-gradient(90deg,#5a4030 0 10px,#6b4c38 10px 20px);overflow:hidden}
+.timer .bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--red),var(--gold));border-radius:4px;transform-origin:left;transform:scaleX(1)}
+.timer b{position:absolute;right:10px;font-weight:900;font-size:14px;color:var(--gold);font-variant-numeric:tabular-nums}
+.timer.hurry b{color:#ff8a7a;animation:blink .4s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.stats{display:flex;gap:6px}
+.stat{display:flex;align-items:center;gap:6px;background:rgba(29,20,16,.8);border-radius:12px;padding:4px 10px 4px 6px;box-shadow:inset 0 0 0 2px rgba(251,247,238,.18);min-width:0}
+.stat svg{width:26px;height:26px;flex:none}
+.stat b{font-family:var(--disp);font-weight:400;font-size:20px;line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat small{font-size:11px;font-weight:800;color:var(--hinoki);white-space:nowrap}
+.stat.bill{background:var(--paper);color:var(--ink);box-shadow:0 3px 0 #b3a58c;font-family:var(--dot)}
+.stat.bill b{font-family:var(--dot);font-size:17px}
+.stat.bill small{color:var(--muted)}
+.stat.bill.pop{animation:bump .25s}
+@keyframes bump{50%{transform:scale(1.12)}}
+.combo{align-self:flex-start;font-family:var(--disp);font-size:16px;color:var(--gold);background:rgba(29,20,16,.8);border-radius:99px;padding:3px 12px;text-shadow:0 2px 0 #000}
+.warn{position:absolute;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 104px);transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:var(--gold);color:var(--ink);font-weight:900;font-size:16px;padding:7px 14px 7px 10px;border-radius:12px;box-shadow:0 4px 0 var(--gold-dk),0 0 0 4px rgba(242,193,78,.35);white-space:nowrap;animation:wpulse .3s ease-in-out infinite alternate}
+.warn svg{width:24px;height:24px}
+@keyframes wpulse{to{transform:translateX(-50%) scale(1.06)}}
+.msg{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font-family:var(--disp);font-size:clamp(30px,min(11vw,10vh),64px);color:#fff;-webkit-text-stroke:5px var(--ink);paint-order:stroke fill;text-shadow:0 6px 0 var(--red-dk);white-space:nowrap;text-align:center;animation:msgIn .35s cubic-bezier(.2,1.6,.4,1) both}
+.msg.huge{font-size:clamp(40px,min(15vw,14vh),96px);color:var(--gold)}
+@keyframes msgIn{from{transform:translate(-50%,-50%) scale(2.4);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.ono{position:absolute;font-family:var(--disp);font-size:clamp(22px,min(8vw,7vh),46px);color:#fff;-webkit-text-stroke:4px var(--ink);paint-order:stroke fill;transform:translate(-50%,-50%) rotate(-8deg);white-space:nowrap;animation:ono .8s ease-out forwards;pointer-events:none}
+.ono.gold{color:var(--gold)}.ono.red{color:#ff6b5e}.ono.green{color:#a6e05a}
+@keyframes ono{0%{transform:translate(-50%,-50%) rotate(-8deg) scale(.3)}18%{transform:translate(-50%,-50%) rotate(-8deg) scale(1.25)}28%{transform:translate(-50%,-50%) rotate(-8deg) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-90%) rotate(-8deg) scale(1)}}
+.bub{position:absolute;max-width:min(46vw,240px);background:#fff;color:var(--ink);border-radius:16px;padding:6px 12px;font-weight:900;font-size:15px;line-height:1.35;box-shadow:0 3px 0 var(--ink);text-align:center;border:2.5px solid var(--ink);transform:translate(-50%,-100%);white-space:nowrap;pointer-events:none;animation:bubIn .25s cubic-bezier(.2,1.6,.4,1) both}
+.bub::after{content:"";position:absolute;left:50%;margin-left:-9px;bottom:-12px;border:9px solid transparent;border-top-color:var(--ink);border-bottom:0}
+.bub.shout{background:var(--gold);font-size:clamp(17px,5vw,24px);font-family:var(--disp);font-weight:400;padding:6px 14px;animation:bubIn .25s cubic-bezier(.2,1.6,.4,1) both,shake .1s .25s infinite}
+@keyframes bubIn{from{transform:translate(-50%,-100%) scale(.2)}to{transform:translate(-50%,-100%) scale(1)}}
+@keyframes shake{25%{margin-left:2px}75%{margin-left:-2px}}
+.tut{position:absolute;left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 8px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;font-weight:900;font-size:15px;background:rgba(29,20,16,.85);padding:8px 16px 8px 10px;border-radius:14px;white-space:nowrap;box-shadow:inset 0 0 0 2px var(--gold)}
+.tut svg{width:40px;height:40px;flex:none}
+.tut .fing{animation:tapf .8s ease-in-out infinite;transform-origin:20px 30px}
+@keyframes tapf{50%{transform:scale(.82) translateY(3px)}}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.tears{position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 50%,rgba(140,220,120,0) 35%,rgba(110,190,70,.45) 100%);transition:opacity .3s}
+.tears.on{opacity:1}
+
+/* ---------- 一時停止 */
+#vPause{display:flex;align-items:center;justify-content:center;background:rgba(20,12,9,.72);padding:16px}
+.pCard{width:min(340px,100%);display:flex;flex-direction:column;gap:12px;align-items:center}
+.pCard h2{font-family:var(--disp);font-weight:400;font-size:34px;color:var(--gold)}
+
+/* ---------- 結果（レシート） */
+#vResult{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:max(54px,calc(env(safe-area-inset-top) + 50px)) 14px max(12px,calc(env(safe-area-inset-bottom) + 10px));background:linear-gradient(rgba(29,20,16,0) 0%,rgba(29,20,16,0) 30%,rgba(29,20,16,.55) 100%)}
+.rWrap{width:min(440px,100%);max-height:100%;display:grid;grid-template-columns:1fr;grid-template-areas:"top" "rc" "btn";gap:clamp(6px,1.2vh,10px);min-height:0}
+.rTop{grid-area:top;display:flex;justify-content:center;gap:8px;align-items:stretch}
+.big{background:rgba(29,20,16,.85);border-radius:14px;padding:4px 12px 6px;text-align:center;box-shadow:inset 0 0 0 2px rgba(251,247,238,.22);min-width:0}
+.big span{display:block;font-size:11px;font-weight:800;color:var(--hinoki);white-space:nowrap}
+.big b{font-family:var(--disp);font-weight:400;font-size:clamp(26px,min(8vw,5vh),38px);line-height:1.05;color:#fff;white-space:nowrap}
+.big b small{font-size:.45em;margin-left:2px}
+.big.badge{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;background:var(--red);box-shadow:0 3px 0 var(--red-dk);white-space:nowrap}
+.big.badge.ceil{background:var(--gold);color:var(--ink);box-shadow:0 3px 0 var(--gold-dk)}
+.receipt{grid-area:rc;position:relative;background:var(--paper);color:var(--ink);font-family:var(--dot);padding:12px 16px 14px;border-radius:2px;min-height:0;
+  box-shadow:0 10px 24px rgba(0,0,0,.45);
+  -webkit-mask:radial-gradient(circle 6px at 50% 100%,transparent 5.5px,#000 6px) 0 100%/14px 14px repeat-x,linear-gradient(#000,#000) 0 0/100% calc(100% - 7px) no-repeat;
+  mask:radial-gradient(circle 6px at 50% 100%,transparent 5.5px,#000 6px) 0 100%/14px 14px repeat-x,linear-gradient(#000,#000) 0 0/100% calc(100% - 7px) no-repeat}
+.rcHead{text-align:center;border-bottom:2px dashed #b9ad98;padding-bottom:6px;margin-bottom:6px}
+.rcHead b{display:block;font-size:16px;letter-spacing:.06em}
+.rcHead small{display:block;font-size:11px;color:var(--muted)}
+.rcLines{display:flex;flex-direction:column;gap:2px;font-size:14px}
+.rcL{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.rcL i{flex:none;width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
+.rcL .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.rcL .q{color:var(--muted)}
+.rcL .p{min-width:76px;text-align:right}
+.rcL.brk{color:var(--red)}
+.rcL.in{animation:printIn .18s ease-out both}
+@keyframes printIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.rcSum{border-top:2px dashed #b9ad98;margin-top:6px;padding-top:4px;font-size:13px}
+.rcSum .rcL{color:#5a4a3c}
+.rcTotal{display:flex;align-items:baseline;justify-content:space-between;font-size:16px;margin-top:2px}
+.rcTotal b{font-size:clamp(26px,min(8vw,5vh),34px);letter-spacing:.02em}
+.rcNote{font-size:11px;color:var(--muted);text-align:center;margin-top:4px}
+.stamp{position:absolute;right:10px;top:30%;mix-blend-mode:multiply;font-family:var(--disp);font-weight:400;font-size:clamp(20px,min(6.6vw,4.2vh),30px);line-height:1.15;padding:8px 14px;border:5px solid currentColor;border-radius:14px;transform:rotate(-9deg);text-align:center;background:rgba(255,255,255,.35);box-shadow:inset 0 0 0 3px rgba(255,255,255,.5);max-width:78%;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;pointer-events:none}
+.stamp small{display:block;font-family:'M PLUS Rounded 1c',sans-serif;font-weight:900;font-size:11px;letter-spacing:.1em;opacity:.85}
+.stamp.show{animation:stampIn .45s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes stampIn{from{transform:rotate(-9deg) scale(3.2);opacity:0}to{transform:rotate(-9deg) scale(1);opacity:1}}
+.rLine{grid-area:auto;font-weight:900;font-size:14px;text-align:center;color:#fff;text-shadow:0 2px 4px #000}
+.rBtns{grid-area:btn;display:flex;flex-direction:column;gap:8px}
+.reveal{opacity:0;transition:opacity .3s}
+.reveal.on{opacity:1}
+.toast{position:fixed;left:50%;bottom:20%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;font-weight:900;z-index:80;box-shadow:inset 0 0 0 2px var(--gold)}
+
+/* 小さい縦 */
+@media (max-height:700px){
+  .hi svg{width:46px;height:46px}.hi p{font-size:11.5px;line-height:1.4}.hi b{font-size:14px}.howCard{gap:7px;padding:12px}
+  .btn{min-height:46px;font-size:16px}.btn.red{min-height:52px;font-size:19px}
+  .rcLines{font-size:13px}.rcHead{padding-bottom:4px;margin-bottom:4px}.rcHead b{font-size:14px}.receipt{padding:9px 14px 12px}
+  .rBtns{gap:6px}
+}
+/* 背の低い横 */
+@media (max-height:560px) and (orientation:landscape){
+  #vTitle{background:radial-gradient(60% 90% at 25% 50%,rgba(42,23,18,.72),rgba(42,23,18,0) 70%);flex-direction:row;justify-content:space-around;align-items:center;padding-top:max(46px,calc(env(safe-area-inset-top) + 40px));padding-bottom:max(16px,env(safe-area-inset-bottom))}
+  .logo .l2{font-size:clamp(48px,17vh,96px)}
+  .tBtns{width:min(300px,40vw)}
+  .howList{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .hi{flex-direction:column;text-align:center;gap:4px;padding:6px}
+  .hi svg{width:40px;height:40px}.hi p{font-size:11px;line-height:1.35}.hi b{font-size:13px}
+  .howCard{width:min(760px,100%);gap:6px;padding:10px 12px}.howCard h2{font-size:18px}.ctrl{font-size:12px;padding:5px 8px}
+  #vResult{justify-content:center;align-items:flex-end;padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) 12px}
+  .rWrap{width:min(580px,60vw);grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"top rc" "btn rc";align-content:end;align-items:end;margin-left:auto}
+  .rTop{flex-direction:column;align-self:end}
+  .receipt{max-height:calc(100svh - 16px);min-height:168px}
+  .rcLines{font-size:12.5px;gap:0}.rcSum{font-size:12px}.rcTotal b{font-size:24px}.rcNote{display:none}
+  .btn{min-height:42px;font-size:15px}.btn.red{min-height:48px;font-size:17px}
+  .rBtns .row .btn svg{display:none}
+  .stamp{font-size:clamp(17px,5vh,24px);padding:5px 10px;border-width:4px}
+  .warn{top:calc(max(8px,env(safe-area-inset-top)) + 72px)}
+  .msg{top:46%}
+}
+@media (max-height:420px) and (orientation:landscape){
+  .big b{font-size:24px}.big{padding:2px 10px 4px}
+  .rcHead small{display:none}.receipt{padding:7px 14px 11px}.rcHead{padding-bottom:3px;margin-bottom:3px}.rcSum{margin-top:3px;padding-top:2px}.rcTotal b{font-size:22px}
+}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="corner">
+  <button id="bPause" hidden aria-label="pause"><svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg></button>
+  <button id="bMute" aria-label="mute"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/><path class="off" d="M16 9l5 6M21 9l-5 6" style="display:none"/></svg></button>
+  <button id="bLang" aria-label="language">EN</button>
+</div>
+
+<!-- タイトル -->
+<main id="vTitle" class="view">
+  <div class="noren">
+    <div class="logo">
+      <span class="l1" data-t="title1"></span>
+      <span class="l2" data-t="title2"></span>
+      <span class="sub" data-t="sub"></span>
+    </div>
+  </div>
+  <div class="tBtns">
+    <div class="best" id="bestLine" hidden></div>
+    <button class="btn red" id="bStart"><svg viewBox="0 0 24 24"><path d="M5 21L17 3M9 21L21 5"/></svg><span data-t="start"></span></button>
+    <button class="btn ghost" id="bHow"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></svg><span data-t="how"></span></button>
+  </div>
+</main>
+
+<!-- 遊び方 -->
+<main id="vHow" class="view" hidden>
+  <div class="howCard">
+    <h2 data-t="howTitle"></h2>
+    <div class="howList">
+      <div class="hi">
+        <svg viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#4a2a1c"/><rect x="0" y="40" width="64" height="12" fill="#8a8f96"/><path d="M32 6v38" stroke="#fff3a8" stroke-width="5" opacity=".75"/><ellipse cx="24" cy="44" rx="11" ry="4" fill="#3d7bd9"/><rect x="18" y="38" width="12" height="5" rx="2" fill="#fff"/><rect x="18" y="35" width="12" height="4" rx="2" fill="#ff7a45"/><path d="M8 46h6M4 50h8" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="48" cy="22" r="7" fill="#fff" opacity=".9"/><circle cx="48" cy="22" r="11" fill="none" stroke="#fff" stroke-width="2" opacity=".5"/></svg>
+        <div><b data-t="how1"></b><p data-t="how1b"></p></div>
+      </div>
+      <div class="hi">
+        <svg viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#4a2a1c"/><ellipse cx="30" cy="54" rx="14" ry="4" fill="#f3efe6"/><ellipse cx="32" cy="46" rx="13" ry="4" fill="#3d7bd9"/><ellipse cx="35" cy="38" rx="12" ry="4" fill="#d83a34"/><ellipse cx="39" cy="30" rx="11" ry="4" fill="#f3efe6"/><g transform="rotate(25 50 18)"><ellipse cx="50" cy="18" rx="10" ry="3.5" fill="#e2b33c"/></g><path d="M56 30l4 6" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M8 20q4-6 8 0" stroke="#fff3a8" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+        <div><b data-t="how2"></b><p data-t="how2b"></p></div>
+      </div>
+      <div class="hi">
+        <svg viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#4a2a1c"/><ellipse cx="20" cy="44" rx="10" ry="4" fill="#e2b33c"/><rect x="14" y="36" width="12" height="6" rx="2" fill="#fff"/><rect x="14" y="33" width="12" height="4" rx="2" fill="#f28aa0"/><ellipse cx="44" cy="44" rx="9" ry="3.5" fill="#24201f" stroke="#c9a043" stroke-width="1.5"/><path d="M37 41q7-14 14 0z" fill="#7cbf3a"/><path d="M42 30l-2-6M47 30l2-6" stroke="#9fe0ff" stroke-width="2.5" stroke-linecap="round"/><path d="M20 20h2M20 14v12" stroke="#f2c14e" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div><b data-t="how3"></b><p data-t="how3b"></p></div>
+      </div>
+    </div>
+    <div class="ctrl" id="ctrlLine"></div>
+    <div class="row">
+      <button class="btn ghost" id="bHowBack" style="color:var(--ink);background:#efe6d3;box-shadow:inset 0 0 0 2px #cdbf9f"><span data-t="back"></span></button>
+      <button class="btn red" id="bHowGo"><span data-t="start"></span></button>
+    </div>
+  </div>
+</main>
+
+<!-- プレイ中 -->
+<main id="vPlay" class="view" hidden>
+  <div class="tears" id="tears"></div>
+  <div class="flash" id="flash"></div>
+  <div class="hud">
+    <div class="timer" id="timer"><div class="bar"><i id="timeBar"></i></div><b id="timeNum">45</b></div>
+    <div class="stats">
+      <div class="stat"><svg viewBox="0 0 26 26"><ellipse cx="13" cy="19" rx="11" ry="3.6" fill="#f3efe6"/><ellipse cx="13" cy="14" rx="10" ry="3.4" fill="#d83a34"/><ellipse cx="13" cy="9" rx="9" ry="3.2" fill="#3d7bd9"/><ellipse cx="13" cy="5" rx="8" ry="2.8" fill="#e2b33c"/></svg><b id="hPlates">0</b><small id="hHeight">0cm</small></div>
+      <div class="stat bill" id="hBillBox"><small data-t="hudBill"></small><b id="hBill">0</b></div>
+    </div>
+    <div class="combo" id="hCombo" hidden></div>
+  </div>
+  <div class="warn" id="warn" hidden><svg viewBox="0 0 24 24"><path d="M12 3L2 21h20z" fill="#1d1410"/><path d="M12 10v5M12 18h.01" stroke="#f2c14e" stroke-width="2.6" stroke-linecap="round"/></svg><span id="warnTxt"></span></div>
+  <div id="fx"></div>
+  <div class="msg" id="msg" hidden></div>
+  <div class="tut" id="tut" hidden><svg viewBox="0 0 40 40"><circle cx="20" cy="16" r="12" fill="none" stroke="#f2c14e" stroke-width="2" opacity=".6"/><g class="fing"><path d="M16 34V16a3 3 0 0 1 6 0v8l6 1.5a3 3 0 0 1 2.2 3.4L29 34z" fill="#fff" stroke="#1d1410" stroke-width="1.5"/></g></svg><span id="tutTxt"></span></div>
+</main>
+
+<!-- 一時停止 -->
+<main id="vPause" class="view" hidden>
+  <div class="pCard">
+    <h2 data-t="paused"></h2>
+    <button class="btn red" id="bResume"><span data-t="resume"></span></button>
+    <button class="btn ghost" id="bQuit"><span data-t="toTitle"></span></button>
+  </div>
+</main>
+
+<!-- 結果 -->
+<main id="vResult" class="view" hidden>
+  <div class="rWrap">
+    <div class="rTop reveal" id="rTop">
+      <div class="big"><span data-t="resCount"></span><b id="rCount">0</b></div>
+      <div class="big"><span data-t="resHeight"></span><b id="rHeight">0</b></div>
+      <div class="big badge" id="rBadge" hidden></div>
+    </div>
+    <div class="receipt" id="receipt">
+      <div class="rcHead"><b data-t="receiptShop"></b><small id="rcDate"></small></div>
+      <div class="rcLines" id="rcLines"></div>
+      <div class="rcSum reveal" id="rcSum">
+        <div class="rcL"><span class="nm" data-t="receiptSub"></span><span class="p" id="rcSub"></span></div>
+        <div class="rcL"><span class="nm" data-t="receiptTax"></span><span class="p" id="rcTax"></span></div>
+        <div class="rcTotal"><span data-t="receiptTotal"></span><b id="rcTotal">0</b></div>
+        <div class="rcNote" data-t="receiptNote"></div>
+      </div>
+      <div class="stamp" id="rStamp" style="visibility:hidden"></div>
+    </div>
+    <div class="rBtns reveal" id="rBtns">
+      <button class="btn red" id="bAgain"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.5-5.8M4 4v4h4"/></svg><span data-t="again"></span></button>
+      <div class="row">
+        <button class="btn" id="bSave"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span data-t="save"></span></button>
+        <button class="btn ghost" id="bTitle"><span data-t="toTitle"></span></button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+  var opt={passive:false};
+  ['gesturestart','gesturechange','gestureend'].forEach(function(n){document.addEventListener(n,function(e){e.preventDefault()},opt)});
+  document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault()},opt);
+  var last=0;document.addEventListener('touchend',function(e){var n=Date.now();if(n-last<300&&!(e.target.closest&&e.target.closest('button,a')))e.preventDefault();last=n},opt);
+  document.addEventListener('dblclick',function(e){e.preventDefault()},opt);
+  window.addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault()},opt);
+  window.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&['+','-','=','0',';'].indexOf(e.key)>=0)e.preventDefault()});
+})();
+(function(){
+  var errs=[];
+  window.addEventListener('error',function(e){errs.push((e.message||'error')+' @'+(e.filename||'')+':'+(e.lineno||''))});
+  window.addEventListener('unhandledrejection',function(e){errs.push('reject: '+(e.reason&&e.reason.message||e.reason))});
+  setTimeout(function(){
+    if(window.__stReady) return;
+    var d=document.createElement('div');d.id='boot-err';
+    d.style.cssText='position:fixed;inset:auto 8px 8px 8px;z-index:99;background:#fff;color:#b00;font:12px/1.4 monospace;white-space:pre-wrap;padding:10px;border-radius:8px';
+    d.textContent='起動できませんでした / failed to start\n'+(errs.join('\n')||'(no error captured)')+'\n'+navigator.userAgent;
+    document.body.appendChild(d);
+  },8000);
+})();
+</script>
+<script src="data.js?v=1"></script>
+<script src="snd.js?v=1"></script>
+<script type="module" src="game.js?v=1"></script>
+</body>
+</html>
