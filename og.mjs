@@ -1,4 +1,5 @@
 // SNS用サムネ og.png（1200x630）。皿タワーが崩れて宙を舞う瞬間＋「お客様ーっ！」＋タイトル。node og.mjs
+import './mute-auto.mjs'  // テスト中は絶対に音を出さない（playwright を無音に差し替え）
 import { chromium } from 'playwright'
 import { spawn } from 'node:child_process'
 const ROOT = import.meta.dirname

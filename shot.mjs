@@ -1,4 +1,5 @@
 // 手元確認用の撮影。node shot.mjs <name> <w> <h> <js>
+import './mute-auto.mjs'  // テスト中は絶対に音を出さない（playwright を無音に差し替え）
 import { chromium } from 'playwright'
 import { spawn } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
