@@ -57,7 +57,7 @@ main.view{position:fixed;inset:0;z-index:2;height:100svh;overflow:hidden}
 #corner svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- タイトル */
-#vTitle{display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:max(56px,calc(env(safe-area-inset-top) + 50px)) 16px max(26px,calc(env(safe-area-inset-bottom) + 20px));background:linear-gradient(rgba(42,23,18,.7),rgba(42,23,18,0) 38%,rgba(42,23,18,0) 62%,rgba(42,23,18,.75))}
+#vTitle{display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:max(56px,calc(env(safe-area-inset-top) + 50px)) 16px max(26px,calc(calc(env(safe-area-inset-bottom) + var(--inapp-bot,0px)) + 20px));background:linear-gradient(rgba(42,23,18,.7),rgba(42,23,18,0) 38%,rgba(42,23,18,0) 62%,rgba(42,23,18,.75))}
 .noren{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center}
 .logo{line-height:1;transform:rotate(-2deg)}
 .logo .l1{display:inline-block;font-family:var(--disp);font-size:clamp(20px,min(6.4vw,4.6vh),36px);color:var(--ink);background:var(--hinoki);padding:4px 14px 6px;border-radius:6px;box-shadow:0 4px 0 #a88a5a}
@@ -69,7 +69,7 @@ html[lang=en] .logo .l2{font-size:clamp(40px,min(12vw,10vh),92px)}
 .best{font-weight:900;font-size:13px;text-align:center;color:var(--hinoki);text-shadow:0 2px 4px #000}
 
 /* ---------- 遊び方 */
-#vHow{display:flex;align-items:center;justify-content:center;padding:max(56px,calc(env(safe-area-inset-top) + 50px)) 14px max(16px,calc(env(safe-area-inset-bottom) + 12px));background:rgba(29,20,16,.6)}
+#vHow{display:flex;align-items:center;justify-content:center;padding:max(56px,calc(env(safe-area-inset-top) + 50px)) 14px max(16px,calc(calc(env(safe-area-inset-bottom) + var(--inapp-bot,0px)) + 12px));background:rgba(29,20,16,.6)}
 .howCard{width:min(560px,100%);max-height:100%;background:var(--paper);color:var(--ink);border-radius:22px;padding:16px;box-shadow:0 8px 0 #b3a58c,0 18px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:10px;min-height:0;border-top:10px solid var(--indigo)}
 .howCard h2{font-family:var(--disp);font-weight:400;font-size:24px;text-align:center}
 .howList{display:flex;flex-direction:column;gap:8px;min-height:0;overflow:hidden}
@@ -114,7 +114,7 @@ html[lang=en] .logo .l2{font-size:clamp(40px,min(12vw,10vh),92px)}
 .bub.shout{background:var(--gold);font-size:clamp(17px,5vw,24px);font-family:var(--disp);font-weight:400;padding:6px 14px;animation:bubIn .25s cubic-bezier(.2,1.6,.4,1) both,shake .1s .25s infinite}
 @keyframes bubIn{from{transform:translate(-50%,-100%) scale(.2)}to{transform:translate(-50%,-100%) scale(1)}}
 @keyframes shake{25%{margin-left:2px}75%{margin-left:-2px}}
-.tut{position:absolute;left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 8px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;font-weight:900;font-size:15px;background:rgba(29,20,16,.85);padding:8px 16px 8px 10px;border-radius:14px;white-space:nowrap;box-shadow:inset 0 0 0 2px var(--gold)}
+.tut{position:absolute;left:50%;bottom:calc(max(14px,calc(env(safe-area-inset-bottom) + var(--inapp-bot,0px))) + 8px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;font-weight:900;font-size:15px;background:rgba(29,20,16,.85);padding:8px 16px 8px 10px;border-radius:14px;white-space:nowrap;box-shadow:inset 0 0 0 2px var(--gold)}
 .tut svg{width:40px;height:40px;flex:none}
 .tut .fing{animation:tapf .8s ease-in-out infinite;transform-origin:20px 30px}
 @keyframes tapf{50%{transform:scale(.82) translateY(3px)}}
@@ -128,7 +128,7 @@ html[lang=en] .logo .l2{font-size:clamp(40px,min(12vw,10vh),92px)}
 .pCard h2{font-family:var(--disp);font-weight:400;font-size:34px;color:var(--gold)}
 
 /* ---------- 結果（レシート） */
-#vResult{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:max(54px,calc(env(safe-area-inset-top) + 50px)) 14px max(12px,calc(env(safe-area-inset-bottom) + 10px));background:linear-gradient(rgba(29,20,16,0) 0%,rgba(29,20,16,0) 30%,rgba(29,20,16,.55) 100%)}
+#vResult{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:max(54px,calc(env(safe-area-inset-top) + 50px)) 14px max(12px,calc(calc(env(safe-area-inset-bottom) + var(--inapp-bot,0px)) + 10px));background:linear-gradient(rgba(29,20,16,0) 0%,rgba(29,20,16,0) 30%,rgba(29,20,16,.55) 100%)}
 .rWrap{width:min(440px,100%);max-height:100%;display:grid;grid-template-columns:1fr;grid-template-areas:"top" "rc" "btn";gap:clamp(6px,1.2vh,10px);min-height:0}
 .rTop{grid-area:top;display:flex;justify-content:center;gap:8px;align-items:stretch}
 .big{background:rgba(29,20,16,.85);border-radius:14px;padding:4px 12px 6px;text-align:center;box-shadow:inset 0 0 0 2px rgba(251,247,238,.22);min-width:0}
@@ -177,14 +177,14 @@ html[lang=en] .logo .l2{font-size:clamp(40px,min(12vw,10vh),92px)}
 }
 /* 背の低い横 */
 @media (max-height:560px) and (orientation:landscape){
-  #vTitle{background:radial-gradient(60% 90% at 25% 50%,rgba(42,23,18,.72),rgba(42,23,18,0) 70%);flex-direction:row;justify-content:space-around;align-items:center;padding-top:max(46px,calc(env(safe-area-inset-top) + 40px));padding-bottom:max(16px,env(safe-area-inset-bottom))}
+  #vTitle{background:radial-gradient(60% 90% at 25% 50%,rgba(42,23,18,.72),rgba(42,23,18,0) 70%);flex-direction:row;justify-content:space-around;align-items:center;padding-top:max(46px,calc(env(safe-area-inset-top) + 40px));padding-bottom:max(16px,calc(env(safe-area-inset-bottom) + var(--inapp-bot,0px)))}
   .logo .l2{font-size:clamp(48px,17vh,96px)}
   .tBtns{width:min(300px,40vw)}
   .howList{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
   .hi{flex-direction:column;text-align:center;gap:4px;padding:6px}
   .hi svg{width:40px;height:40px}.hi p{font-size:11px;line-height:1.35}.hi b{font-size:13px}
   .howCard{width:min(760px,100%);gap:6px;padding:10px 12px}.howCard h2{font-size:18px}.ctrl{font-size:12px;padding:5px 8px}
-  #vResult{justify-content:center;align-items:flex-end;padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) 12px}
+  #vResult{justify-content:center;align-items:flex-end;padding:max(8px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(8px,calc(env(safe-area-inset-bottom) + var(--inapp-bot,0px))) 12px}
   .rWrap{width:min(580px,60vw);grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"top rc" "btn rc";align-content:end;align-items:end;margin-left:auto}
   .rTop{flex-direction:column;align-self:end}
   .receipt{max-height:calc(100svh - 16px);min-height:168px}
@@ -342,6 +342,6 @@ html[lang=en] .logo .l2{font-size:clamp(40px,min(12vw,10vh),92px)}
 <script src="data.js?v=2"></script>
 <script src="snd.js?v=2"></script>
 <script type="module" src="game.js?v=2"></script>
-<script src="support.js?v=4" data-ja="一皿" data-en="a plate of sushi"></script>
+<script src="support.js?v=5" data-ja="一皿" data-en="a plate of sushi"></script>
 </body>
 </html>
